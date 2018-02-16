@@ -1,0 +1,2 @@
+public class SudokuBoardKnapp1 {
+}
