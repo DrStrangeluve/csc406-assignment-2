@@ -8,7 +8,7 @@ public class MainKnapp1 {
             System.exit(1);
         }
         else {
-            SudokuToSatReducerKnapp1 sudoku_sat_instance = new SudokuToSatReducerKnapp1(new File(args[0]));
+            new SudokuToSatReducerKnapp1(new File(args[0]));
         }
     }
 }
