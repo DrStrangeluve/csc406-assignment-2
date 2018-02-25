@@ -13,7 +13,8 @@ public class SudokuToSatReducerKnapp1 {
             board.setValue(counter, item);
             counter++;
         }
-        board.boardToString();
+        String bagel = board.boardToString();
+
         int row1 = board.getRow(1);
         int row2 = board.getRow(79);
         int column1 = board.getColumn(1);

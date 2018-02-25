@@ -1,12 +1,16 @@
 public class SudokuBoardKnapp1 {
+    private int boxWidth;
+    private int boxHeight;
     private int[] boardCells;
 
-    SudokuBoardKnapp1(int boxWidth, int boxHeight) {
+    SudokuBoardKnapp1(int inBoxWidth, int inBoxHeight) {
+        boxWidth = inBoxWidth;
+        boxHeight = inBoxHeight;
         boardCells = new int[(int) Math.pow((boxWidth * boxHeight), 2)];
     }
 
     public int getRow(int cellNumber) {
-        return (cellNumber / getBoardSize()) + 1;
+        return (cellNumber / getBoardSize());
     }
 
     public int getColumn(int cellNumber) {
@@ -18,15 +22,15 @@ public class SudokuBoardKnapp1 {
     }
 
     public int getBox(int cellNumber) {
-        return ((((getRow(cellNumber) - 1) / 3) * 3) + ((getColumn(cellNumber) - 1) / 3) + 1);
+        return (getColumn(cellNumber) + boxWidth * getRow(cellNumber));
     }
 
     public int getBoxWidth() {
-        return (int) Math.sqrt(Math.sqrt(boardCells.length));
+        return boxWidth;
     }
 
     public int getBoxHieght() {
-        return (int) Math.sqrt(Math.sqrt(boardCells.length));
+        return boxHeight;
     }
 
     public int getBoardSize() {
@@ -37,17 +41,19 @@ public class SudokuBoardKnapp1 {
         return boardCells.length;
     }
 
-    public void boardToString() {
+    public String boardToString() {
+        String returnString = "";
         int i = 0;
         while (i < getBoardSize()) {
             int j = 0;
             while (j < getBoardSize()) {
-                System.out.format(" %d ", getValue(i * getBoardSize() + j));
+                returnString = String.format("%s%s", returnString, String.format("%d", getValue(i * getBoardSize() + j)));
                 j++;
             }
-            System.out.format("%n");
+            returnString = String.format("%s%n", returnString);
             i++;
         }
+        return returnString;
     }
 
     public void setValue(int cellNumber, int value) {
