@@ -59,4 +59,18 @@ public class SudokuBoardKnapp1 {
     public void setValue(int cellNumber, int value) {
         boardCells[cellNumber] = value;
     }
+
+    public int getVariableCount() {
+        return (int) Math.pow(getBoardSize(), 3);
+    }
+
+    public int getClauseCount(int constraintCount) {
+        int clauses_for_cell = 1 + consecutiveSum(getBoardSize() - 1);
+        int clauses_for_all_cells = clauses_for_cell * numberOfCells();
+        return clauses_for_all_cells * constraintCount;
+    }
+
+    public int consecutiveSum(int n) {
+        return n * (n + 1)/2;
+    }
 }
