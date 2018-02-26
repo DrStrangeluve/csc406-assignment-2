@@ -2,15 +2,16 @@ import java.io.*;
 import java.util.Scanner;
 
 public class SudokuToSatReducerKnapp1 {
-    private static final String outputFileName = "output/sudoku_output.cnf";
+    private static final String outputFileName = "sudoku_output.cnf";
     private Writer writer;
     private SudokuBoardKnapp1 board;
 
     SudokuToSatReducerKnapp1(File inputFile) {
         createOutputFile(outputFileName);
         createBoard(inputFile);
+        // optional, but shows the board on the cnf
+        cnfWriteHeader();
         calcTime();
-
     }
 
     private void createOutputFile(String fileName) {
@@ -41,9 +42,9 @@ public class SudokuToSatReducerKnapp1 {
         write(String.format("p cnf %d %d%n", board.getVariableCount(), board.getClauseCount(4)));
         // Since the rows, columns and boxes are calculated separately,
         // but use the same counters,
-        // i can be used for both values
-        for (int i = 1; i <= board.getBoardSize(); i++) {
-            // The values for k are then looped through
+        // i can be used for row, col, or box number
+
+        for (int i = 0; i < board.getBoardSize(); i++) {
             for (int k = 1; k <= board.getBoardSize(); k++) {
                 atleastOneInRow(i, k);
                 atmostOneInRow(i, k);
@@ -53,8 +54,10 @@ public class SudokuToSatReducerKnapp1 {
                 atmostOneInBox(i, k);
             }
         }
-        // Lastly the cells need to be looped through for constraint 4
-        for (int i = 1; i < board.numberOfCells(); i++) {
+        // Lastly the cells need to be looped through for constraint
+        // Also add prefilled cell value clauses
+        for (int i = 0; i < board.numberOfCells(); i++) {
+            prefilledValue(i);
             atleastOneInCell(i);
             atmostOneInCell(i);
         }
@@ -81,51 +84,70 @@ public class SudokuToSatReducerKnapp1 {
 
     private void atleastOneInRow(int row, int value) {
         // Loop through each col for the row and add the constraint, finally add a 0 and a new line
-        for (int i = 1; i <= board.getBoardSize(); i++) {
-            write(String.format("%d%d%d ", row, i, value));
+        for (int j = 0; j < board.getBoardSize(); j++) {
+            write(String.format("%d ", convertToSatFormat(row, j, value)));
         }
         write(String.format("0%n"));
     }
 
     private void atmostOneInRow(int row, int value) {
-        // Loop through each column value minus one as it will be included in the formula
-        for (int i = 1; i < board.getBoardSize(); i++) {
-            write(String.format("-%d%d%d ", row, i, value));
-            write(String.format("-%d%d%d 0%n", row, i + 1, value));
+        // Loop through each column, and get each value down to the current col value
+        for (int j = 0; j < board.getBoardSize(); j++) {
+            for (int k = board.getBoardSize() - 1; k > j; k--) {
+                write(String.format("-%d ", convertToSatFormat(row, j, value)));
+                write(String.format("-%d 0%n", convertToSatFormat(row, k, value)));
+            }
         }
     }
 
     private void atleastOneInCol(int col, int value) {
         // Loop through each row for the col and add the constraint, finally add a 0 and a new line
-        for (int i = 1; i <= board.getBoardSize(); i++) {
-            write(String.format("%d%d%d ", i, col, value));
+        for (int i = 0; i < board.getBoardSize(); i++) {
+            write(String.format("%d ", convertToSatFormat(i, col, value)));
         }
         write(String.format("0%n"));
     }
 
     private void atmostOneInCol(int col, int value) {
-        // Loop through each row value minus one as it will be included in the formula
-        for (int i = 1; i < board.getBoardSize(); i++) {
-            write(String.format("-%d%d%d ", i, col, value));
-            write(String.format("-%d%d%d 0%n", i + 1, col, value));
+        // Loop through each row, and get each value down to the current row value
+        for (int i = 0; i < board.getBoardSize(); i++) {
+            for (int k = board.getBoardSize() - 1; k > i; k--) {
+                write(String.format("-%d ", convertToSatFormat(i, col, value)));
+                write(String.format("-%d 0%n", convertToSatFormat(k, col, value)));
+            }
         }
     }
 
     private void atleastOneInBox(int box, int value) {
-
+    int[] rowColBookends = getRowColBookends(box);
+        for (int i = rowColBookends[0]; i <= rowColBookends[1]; i++) {
+            for (int j = rowColBookends[2]; j <= rowColBookends[3]; j++) {
+                write(String.format("%d ", convertToSatFormat(i, j, value)));
+            }
+        }
+        write(String.format("0%n"));
     }
 
     private void atmostOneInBox(int box, int value) {
-
+        int[] rowColBookends = getRowColBookends(box);
+        for (int i = rowColBookends[0]; i <= rowColBookends[1]; i++) {
+            for (int j = rowColBookends[2]; j <= rowColBookends[3]; j++) {
+                for (int k = rowColBookends[1]; k >= i; k--) {
+                    for (int m = rowColBookends[3]; m >= j; m--) {
+                        write(String.format("-%d ", convertToSatFormat(i, j, value)));
+                        write(String.format("-%d 0%n", convertToSatFormat(k, m, value)));
+                    }
+                }
+            }
+        }
     }
 
     private void atleastOneInCell(int cell) {
         // Loop through each k value for the row and col and add the constraint, finally add a 0 and a new line
-        // Due to 0 based add one to the variables
-        int cell_row = board.getRow(cell) + 1;
-        int cell_col = board.getColumn(cell) + 1;
+        int cell_row = board.getRow(cell);
+        int cell_col = board.getColumn(cell);
         for (int i = 1; i <= board.getBoardSize(); i++) {
-            write(String.format("%d%d%d ", cell_row, cell_col, i));
+            write(String.format("%d ", convertToSatFormat(cell_row, cell_col, i)));
         }
         write(String.format("0%n"));
     }
@@ -133,11 +155,46 @@ public class SudokuToSatReducerKnapp1 {
     private void atmostOneInCell(int cell) {
         // Loop through each k value minus one as it will be included in the formula
         // Due to 0 based add one to the variables
-        int cell_row = board.getRow(cell) + 1;
-        int cell_col = board.getColumn(cell) + 1;
+        int cell_row = board.getRow(cell);
+        int cell_col = board.getColumn(cell);
         for (int i = 1; i < board.getBoardSize(); i++) {
-            write(String.format("-%d%d%d ", cell_row, cell_col, i));
-            write(String.format("-%d%d%d 0%n", cell_row, cell_col, i + 1));
+            for (int k = board.getBoardSize(); k > i; k--) {
+                write(String.format("-%d ", convertToSatFormat(cell_row, cell_col, i)));
+                write(String.format("-%d 0%n", convertToSatFormat(cell_row, cell_col, k)));
+            }
         }
     }
+
+    private void prefilledValue(int cell) {
+        // Add the prefilled values
+        int prefilledValue = board.getValue(cell);
+        if (prefilledValue != 0) {
+            int cell_row = board.getRow(cell);
+            int cell_col = board.getColumn(cell);
+            write(String.format("%d 0%n", convertToSatFormat(cell_row, cell_col, prefilledValue)));
+        }
+    }
+
+    private void cnfWriteHeader() {
+        write("c Original Sudoku Input\n");
+        write(String.format("c %d %d\n", board.getBoxHeight(), board.getBoxWidth()));
+        String[] lines = board.boardToString().split(System.getProperty("line.separator"));
+        for (String line: lines) {
+            write(String.format("c %s\n", line));
+        }
+    }
+
+    // Calculate the starting and ending row, col for a given box based on box size and box number
+    private int[] getRowColBookends(int box) {
+        int rowStart = ((box) / board.getBoxHeight()) * board.getBoxHeight();
+        int rowEnd = rowStart + board.getBoxHeight() - 1;
+        int colStart = ((box) % board.getBoxWidth()) * board.getBoxWidth();
+        int colEnd = colStart + board.getBoxWidth() - 1;
+        return new int[]{rowStart, rowEnd, colStart, colEnd};
+    }
+
+    private int convertToSatFormat(int row, int col, int value) {
+        return (board.numberOfCells() * row) + (board.getBoardSize() * col) + value;
+    }
+
 }

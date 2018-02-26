@@ -2,11 +2,13 @@ public class SudokuBoardKnapp1 {
     private int boxWidth;
     private int boxHeight;
     private int[] boardCells;
+    private int prefilledClauseCounter;
 
     SudokuBoardKnapp1(int inBoxWidth, int inBoxHeight) {
         boxWidth = inBoxWidth;
         boxHeight = inBoxHeight;
         boardCells = new int[(int) Math.pow((boxWidth * boxHeight), 2)];
+        prefilledClauseCounter = 0;
     }
 
     public int getRow(int cellNumber) {
@@ -29,7 +31,7 @@ public class SudokuBoardKnapp1 {
         return boxWidth;
     }
 
-    public int getBoxHieght() {
+    public int getBoxHeight() {
         return boxHeight;
     }
 
@@ -47,7 +49,7 @@ public class SudokuBoardKnapp1 {
         while (i < getBoardSize()) {
             int j = 0;
             while (j < getBoardSize()) {
-                returnString = String.format("%s%s", returnString, String.format("%d", getValue(i * getBoardSize() + j)));
+                returnString = String.format("%s%s ", returnString, String.format("%d", getValue(i * getBoardSize() + j)));
                 j++;
             }
             returnString = String.format("%s%n", returnString);
@@ -57,6 +59,9 @@ public class SudokuBoardKnapp1 {
     }
 
     public void setValue(int cellNumber, int value) {
+        if (value != 0) {
+            prefilledClauseCounter++;
+        }
         boardCells[cellNumber] = value;
     }
 
@@ -67,7 +72,7 @@ public class SudokuBoardKnapp1 {
     public int getClauseCount(int constraintCount) {
         int clauses_for_cell = 1 + consecutiveSum(getBoardSize() - 1);
         int clauses_for_all_cells = clauses_for_cell * numberOfCells();
-        return clauses_for_all_cells * constraintCount;
+        return clauses_for_all_cells * constraintCount + prefilledClauseCounter;
     }
 
     public int consecutiveSum(int n) {
