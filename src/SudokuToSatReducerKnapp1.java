@@ -41,9 +41,7 @@ public class SudokuToSatReducerKnapp1 {
     private void reduceBoard() {
         write(String.format("p cnf %d %d%n", board.getVariableCount(), board.getClauseCount(4)));
         // Since the rows, columns and boxes are calculated separately,
-        // but use the same counters,
-        // i can be used for row, col, or box number
-
+        // but use the same counters, thus i can be used for all three
         for (int i = 0; i < board.getBoardSize(); i++) {
             for (int k = 1; k <= board.getBoardSize(); k++) {
                 atleastOneInRow(i, k);
@@ -54,8 +52,8 @@ public class SudokuToSatReducerKnapp1 {
                 atmostOneInBox(i, k);
             }
         }
+        // Add prefilled cells as clauses
         // Lastly the cells need to be looped through for constraint
-        // Also add prefilled cell value clauses
         for (int i = 0; i < board.numberOfCells(); i++) {
             prefilledValue(i);
             atleastOneInCell(i);
@@ -154,7 +152,6 @@ public class SudokuToSatReducerKnapp1 {
 
     private void atmostOneInCell(int cell) {
         // Loop through each k value minus one as it will be included in the formula
-        // Due to 0 based add one to the variables
         int cell_row = board.getRow(cell);
         int cell_col = board.getColumn(cell);
         for (int i = 1; i < board.getBoardSize(); i++) {
@@ -196,5 +193,4 @@ public class SudokuToSatReducerKnapp1 {
     private int convertToSatFormat(int row, int col, int value) {
         return (board.numberOfCells() * row) + (board.getBoardSize() * col) + value;
     }
-
 }
