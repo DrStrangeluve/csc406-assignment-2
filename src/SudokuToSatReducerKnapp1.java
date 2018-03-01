@@ -26,6 +26,9 @@ public class SudokuToSatReducerKnapp1 {
     private void createBoard(File inputFile) {
         try {
             Scanner in = new Scanner(inputFile);
+            while(in.findInLine("c ") != null) {
+                in.nextLine();
+            }
             board = new SudokuBoardKnapp1(in.nextInt(), in.nextInt());
             int cellCounter = 0;
             while (in.hasNextInt()) {
@@ -61,7 +64,7 @@ public class SudokuToSatReducerKnapp1 {
         }
     }
 
-    public void calcTime() {
+    private void calcTime() {
         TimerKnapp1 timer = new TimerKnapp1();
         timer.start();
         reduceBoard();
@@ -117,25 +120,19 @@ public class SudokuToSatReducerKnapp1 {
     }
 
     private void atleastOneInBox(int box, int value) {
-    int[] rowColBookends = getRowColBookends(box);
-        for (int i = rowColBookends[0]; i <= rowColBookends[1]; i++) {
-            for (int j = rowColBookends[2]; j <= rowColBookends[3]; j++) {
-                write(String.format("%d ", convertToSatFormat(i, j, value)));
-            }
+    int[] boxArray = convertTo1DArray(box);
+        for (int i = 0; i <= boxArray.length -1; i++) {
+            write(String.format("%d ", convertToSatFormat(board.getRow(boxArray[i]), board.getColumn(boxArray[i]), value)));
         }
         write(String.format("0%n"));
     }
 
     private void atmostOneInBox(int box, int value) {
-        int[] rowColBookends = getRowColBookends(box);
-        for (int i = rowColBookends[0]; i <= rowColBookends[1]; i++) {
-            for (int j = rowColBookends[2]; j <= rowColBookends[3]; j++) {
-                for (int k = rowColBookends[1]; k >= i; k--) {
-                    for (int m = rowColBookends[3]; m >= j; m--) {
-                        write(String.format("-%d ", convertToSatFormat(i, j, value)));
-                        write(String.format("-%d 0%n", convertToSatFormat(k, m, value)));
-                    }
-                }
+        int[] boxArray = convertTo1DArray(box);
+        for (int i = 0; i <= boxArray.length -1; i++) {
+            for (int j = boxArray.length - 1; j > i; j--) {
+                write(String.format("-%d ", convertToSatFormat(board.getRow(boxArray[i]), board.getColumn(boxArray[i]), value)));
+                write(String.format("-%d 0%n", convertToSatFormat(board.getRow(boxArray[j]), board.getColumn(boxArray[j]), value)));
             }
         }
     }
@@ -182,12 +179,21 @@ public class SudokuToSatReducerKnapp1 {
     }
 
     // Calculate the starting and ending row, col for a given box based on box size and box number
-    private int[] getRowColBookends(int box) {
+    // Convert box to 1D array for easy iterating
+    private int[] convertTo1DArray(int box) {
+        int[] returnArray = new int[board.getBoardSize()];
         int rowStart = ((box) / board.getBoxHeight()) * board.getBoxHeight();
         int rowEnd = rowStart + board.getBoxHeight() - 1;
         int colStart = ((box) % board.getBoxWidth()) * board.getBoxWidth();
         int colEnd = colStart + board.getBoxWidth() - 1;
-        return new int[]{rowStart, rowEnd, colStart, colEnd};
+        int counter = 0;
+        for (int i = rowStart; i <= rowEnd; i++) {
+            for (int j = colStart; j <= colEnd; j++) {
+                returnArray[counter] = board.getCell(i, j);
+                counter++;
+            }
+        }
+        return returnArray;
     }
 
     private int convertToSatFormat(int row, int col, int value) {

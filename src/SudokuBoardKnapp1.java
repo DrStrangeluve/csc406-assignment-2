@@ -23,6 +23,10 @@ public class SudokuBoardKnapp1 {
         return boardCells[cellNumber];
     }
 
+    public int getCell(int row, int col) {
+        return (row * getBoardSize() + col + 1);
+    }
+
     public int getBox(int cellNumber) {
         return (getColumn(cellNumber) + boxWidth * getRow(cellNumber));
     }
@@ -75,7 +79,7 @@ public class SudokuBoardKnapp1 {
         return clauses_for_all_cells * constraintCount + prefilledClauseCounter;
     }
 
-    public int consecutiveSum(int n) {
+    private int consecutiveSum(int n) {
         return n * (n + 1)/2;
     }
 }
